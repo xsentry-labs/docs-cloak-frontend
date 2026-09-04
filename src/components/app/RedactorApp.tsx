@@ -4,18 +4,12 @@ import { useState } from "react";
 import Link from "next/link";
 import Logo from "@/components/shared/Logo";
 import Stepper from "./Stepper";
-import Uploader from "./Uploader";
+import Uploader, { UploadedFile } from "./Uploader";
 import CategoryPicker from "./CategoryPicker";
 import ReviewPanel from "./ReviewPanel";
 import ExportPanel from "./ExportPanel";
-import { DetectedEntity, PII_CATEGORIES, PiiCategory, detectEntities } from "@/lib/pii";
-
-interface UploadedFile {
-  name: string;
-  type: string;
-  text: string;
-  simulated: boolean;
-}
+import { redactDocument } from "@/lib/api";
+import { DetectedEntity, PII_CATEGORIES, PiiCategory } from "@/lib/pii";
 
 const DEFAULT_CATEGORIES = new Set<PiiCategory>(
   PII_CATEGORIES.filter((c) => c.defaultOn).map((c) => c.id)
@@ -27,26 +21,34 @@ export default function RedactorApp() {
   const [categories, setCategories] = useState<Set<PiiCategory>>(DEFAULT_CATEGORIES);
   const [entities, setEntities] = useState<DetectedEntity[]>([]);
   const [detecting, setDetecting] = useState(false);
+  const [detectError, setDetectError] = useState<string | null>(null);
 
   function handleFileReady(f: UploadedFile) {
     setFile(f);
+    setDetectError(null);
     setStep(1);
   }
 
-  function handleDetect() {
+  async function handleDetect() {
     if (!file) return;
     setDetecting(true);
-    setTimeout(() => {
-      setEntities(detectEntities(file.text, categories));
-      setDetecting(false);
+    setDetectError(null);
+    try {
+      const res = await redactDocument(file.file, { categories: Array.from(categories) });
+      setEntities(res.entities);
       setStep(2);
-    }, 700);
+    } catch (err) {
+      setDetectError(err instanceof Error ? err.message : "Detection failed.");
+    } finally {
+      setDetecting(false);
+    }
   }
 
   function handleRestart() {
     setFile(null);
     setEntities([]);
     setCategories(DEFAULT_CATEGORIES);
+    setDetectError(null);
     setStep(0);
   }
 
@@ -72,18 +74,25 @@ export default function RedactorApp() {
           {step === 0 && <Uploader onFileReady={handleFileReady} />}
 
           {step === 1 && file && (
-            <CategoryPicker
-              selected={categories}
-              onChange={setCategories}
-              onBack={() => setStep(0)}
-              onDetect={handleDetect}
-              detecting={detecting}
-            />
+            <div>
+              <CategoryPicker
+                selected={categories}
+                onChange={setCategories}
+                onBack={() => setStep(0)}
+                onDetect={handleDetect}
+                detecting={detecting}
+              />
+              {detectError && (
+                <p className="mt-4 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+                  {detectError}
+                </p>
+              )}
+            </div>
           )}
 
           {step === 2 && file && (
             <ReviewPanel
-              text={file.text}
+              textPreview={file.textPreview}
               entities={entities}
               onChange={setEntities}
               onBack={() => setStep(1)}
@@ -93,10 +102,9 @@ export default function RedactorApp() {
 
           {step === 3 && file && (
             <ExportPanel
-              fileName={file.name}
-              text={file.text}
+              file={file.file}
+              categories={Array.from(categories)}
               entities={entities}
-              simulated={file.simulated}
               onBack={() => setStep(2)}
               onRestart={handleRestart}
             />
@@ -104,8 +112,8 @@ export default function RedactorApp() {
         </div>
 
         <p className="mt-6 text-center text-xs text-slate-400">
-          This is an interactive preview. Uploaded files are processed in your
-          browser and are never sent to a server.
+          Documents are sent to the PII Redactor API for detection and redaction, and
+          automatically deleted after the retention window.
         </p>
       </main>
     </div>

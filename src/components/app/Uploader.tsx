@@ -6,8 +6,15 @@ import { SAMPLE_DOCUMENT } from "@/lib/pii";
 const ACCEPTED = [".pdf", ".docx", ".txt", ".png", ".jpg", ".jpeg", ".csv"];
 const TEXT_EXTENSIONS = [".txt", ".csv"];
 
+export interface UploadedFile {
+  name: string;
+  file: File;
+  /** Plain text of the upload, available client-side only for TXT/CSV — used for the review preview. */
+  textPreview?: string;
+}
+
 interface Props {
-  onFileReady: (file: { name: string; type: string; text: string; simulated: boolean }) => void;
+  onFileReady: (file: UploadedFile) => void;
 }
 
 export default function Uploader({ onFileReady }: Props) {
@@ -24,12 +31,8 @@ export default function Uploader({ onFileReady }: Props) {
       }
       setError(null);
 
-      if (TEXT_EXTENSIONS.includes(ext)) {
-        const text = await file.text();
-        onFileReady({ name: file.name, type: ext, text, simulated: false });
-      } else {
-        onFileReady({ name: file.name, type: ext, text: SAMPLE_DOCUMENT, simulated: true });
-      }
+      const textPreview = TEXT_EXTENSIONS.includes(ext) ? await file.text() : undefined;
+      onFileReady({ name: file.name, file, textPreview });
     },
     [onFileReady]
   );
@@ -76,9 +79,10 @@ export default function Uploader({ onFileReady }: Props) {
       {error && <p className="mt-3 text-sm font-medium text-red-600">{error}</p>}
       <button
         type="button"
-        onClick={() =>
-          onFileReady({ name: "sample_candidate_cv.txt", type: ".txt", text: SAMPLE_DOCUMENT, simulated: false })
-        }
+        onClick={() => {
+          const file = new File([SAMPLE_DOCUMENT], "sample_candidate_cv.txt", { type: "text/plain" });
+          onFileReady({ name: file.name, file, textPreview: SAMPLE_DOCUMENT });
+        }}
         className="mt-4 text-sm font-medium text-indigo-600 hover:underline"
       >
         Or try it with a sample document →
