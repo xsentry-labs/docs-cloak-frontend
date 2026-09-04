@@ -29,7 +29,7 @@ export default function WaitlistForm() {
 
   if (status === "success") {
     return (
-      <div className="rounded-xl border border-emerald-200 bg-emerald-50 px-6 py-4 text-sm font-medium text-emerald-700">
+      <div data-testid="waitlist-success" className="rounded-xl border border-emerald-200 bg-emerald-50 px-6 py-4 text-sm font-medium text-emerald-700">
         You&apos;re on the list. We&apos;ll be in touch soon.
       </div>
     );
@@ -40,6 +40,7 @@ export default function WaitlistForm() {
       <input
         type="email"
         required
+        data-testid="waitlist-email-input"
         placeholder="you@company.com"
         value={email}
         onChange={(e) => setEmail(e.target.value)}
@@ -59,6 +60,7 @@ export default function WaitlistForm() {
       </select>
       <button
         type="submit"
+        data-testid="waitlist-submit"
         disabled={status === "loading"}
         className="rounded-lg bg-indigo-600 px-6 py-3 text-sm font-semibold text-white transition hover:bg-indigo-500 disabled:opacity-60"
       >

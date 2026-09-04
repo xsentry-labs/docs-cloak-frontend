@@ -64,6 +64,7 @@ export default function CategoryPicker({
         </button>
         <button
           type="button"
+          data-testid="detect-button"
           onClick={onDetect}
           disabled={selected.size === 0 || detectingLabel !== null}
           className="rounded-lg bg-slate-900 px-6 py-2.5 text-sm font-semibold text-white transition hover:bg-slate-700 disabled:opacity-50"

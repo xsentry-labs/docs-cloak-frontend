@@ -88,6 +88,7 @@ export default function ExportPanel({ file, categories, entities, onBack, onRest
         <label className="mt-6 flex cursor-pointer items-start gap-3 rounded-xl border border-slate-200 p-4 hover:border-slate-300">
           <input
             type="checkbox"
+            data-testid="protect-original-checkbox"
             checked={protectOriginal}
             onChange={(e) => setProtectOriginal(e.target.checked)}
             className="mt-1 h-4 w-4 accent-indigo-600"
@@ -110,10 +111,9 @@ export default function ExportPanel({ file, categories, entities, onBack, onRest
               <label className="block text-xs font-medium text-slate-600">Password</label>
               <input
                 type="password"
+                data-testid="protect-password-input"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                minLength={MIN_PASSWORD_LENGTH}
-                required={protectOriginal}
                 className="mt-1 w-full rounded border border-slate-300 px-3 py-2 text-sm"
               />
             </div>
@@ -121,15 +121,16 @@ export default function ExportPanel({ file, categories, entities, onBack, onRest
               <label className="block text-xs font-medium text-slate-600">Confirm password</label>
               <input
                 type="password"
+                data-testid="protect-confirm-password-input"
                 value={confirmPassword}
                 onChange={(e) => setConfirmPassword(e.target.value)}
-                minLength={MIN_PASSWORD_LENGTH}
-                required={protectOriginal}
                 className="mt-1 w-full rounded border border-slate-300 px-3 py-2 text-sm"
               />
             </div>
             {passwordError && (
-              <p className="sm:col-span-2 text-xs font-medium text-red-600">{passwordError}</p>
+              <p data-testid="protect-password-error" className="sm:col-span-2 text-xs font-medium text-red-600">
+                {passwordError}
+              </p>
             )}
             <p className="sm:col-span-2 text-xs text-slate-400">
               We never store this password — it&apos;s used once to encrypt the file and then
@@ -144,6 +145,7 @@ export default function ExportPanel({ file, categories, entities, onBack, onRest
           </button>
           <button
             type="submit"
+            data-testid="generate-export-button"
             className="rounded-lg bg-indigo-600 px-6 py-2.5 text-sm font-semibold text-white transition hover:bg-indigo-500"
           >
             Generate export
@@ -165,12 +167,12 @@ export default function ExportPanel({ file, categories, entities, onBack, onRest
 
   if (status === "error") {
     return (
-      <div className="text-center">
+      <div className="text-center" data-testid="export-error-view">
         <span className="mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-red-50 text-2xl">
           ✕
         </span>
         <h2 className="mt-4 text-lg font-semibold text-slate-900">Export failed</h2>
-        <p className="mx-auto mt-2 max-w-md text-sm text-slate-500">{error}</p>
+        <p data-testid="export-error-message" className="mx-auto mt-2 max-w-md text-sm text-slate-500">{error}</p>
         <div className="mt-6 flex justify-center gap-3">
           <button
             type="button"
@@ -185,7 +187,7 @@ export default function ExportPanel({ file, categories, entities, onBack, onRest
   }
 
   return (
-    <div className="text-center">
+    <div className="text-center" data-testid="export-done-view">
       <span className="mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-emerald-50 text-2xl">
         ✓
       </span>
@@ -198,6 +200,7 @@ export default function ExportPanel({ file, categories, entities, onBack, onRest
       <div className="mt-8 flex flex-col items-center justify-center gap-3 sm:flex-row">
         <a
           href={result?.documentUrl}
+          data-testid="download-redacted-link"
           className="rounded-lg bg-indigo-600 px-6 py-2.5 text-sm font-semibold text-white transition hover:bg-indigo-500"
         >
           Download redacted document
@@ -205,6 +208,7 @@ export default function ExportPanel({ file, categories, entities, onBack, onRest
         {result?.originalDocumentUrl && (
           <a
             href={result.originalDocumentUrl}
+            data-testid="download-original-link"
             className="rounded-lg border border-slate-300 px-6 py-2.5 text-sm font-semibold text-slate-700 hover:bg-slate-50"
           >
             Download protected original
@@ -212,6 +216,7 @@ export default function ExportPanel({ file, categories, entities, onBack, onRest
         )}
         <button
           type="button"
+          data-testid="restart-button"
           onClick={onRestart}
           className="rounded-lg border border-slate-300 px-6 py-2.5 text-sm font-semibold text-slate-700 hover:bg-slate-50"
         >

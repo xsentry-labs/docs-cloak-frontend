@@ -74,15 +74,16 @@ export default function ReviewPanel({ textPreview, entities, onChange, onBack, o
           <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-slate-400">
             Detected entities
           </p>
-          <div className="max-h-96 space-y-2 overflow-y-auto pr-1">
+          <div data-testid="entity-list" className="max-h-96 space-y-2 overflow-y-auto pr-1">
             {entities.length === 0 && (
-              <p className="rounded-lg border border-dashed border-slate-300 p-4 text-sm text-slate-500">
+              <p data-testid="no-entities-message" className="rounded-lg border border-dashed border-slate-300 p-4 text-sm text-slate-500">
                 No entities detected for the selected categories.
               </p>
             )}
             {entities.map((entity) => (
               <div
                 key={entity.id}
+                data-testid="entity-row"
                 className={`rounded-lg border p-3 ${
                   entity.accepted ? "border-slate-200 bg-white" : "border-slate-100 bg-slate-50 opacity-60"
                 }`}
@@ -183,6 +184,7 @@ export default function ReviewPanel({ textPreview, entities, onChange, onBack, o
         </button>
         <button
           type="button"
+          data-testid="continue-to-export"
           onClick={onExport}
           className="rounded-lg bg-indigo-600 px-6 py-2.5 text-sm font-semibold text-white transition hover:bg-indigo-500"
         >

@@ -5,6 +5,14 @@ import { SAMPLE_DOCUMENT } from "@/lib/pii";
 
 const ACCEPTED = [".pdf", ".docx", ".txt", ".png", ".jpg", ".jpeg", ".csv"];
 const TEXT_EXTENSIONS = [".txt", ".csv"];
+// Mirrors the backend's default MAX_UPLOAD_BYTES (see docs-cloak's app/config.py) so
+// oversized files are rejected instantly client-side instead of uploading first and
+// failing only once the backend rejects them.
+const MAX_FILE_SIZE_BYTES = Number(process.env.NEXT_PUBLIC_MAX_UPLOAD_BYTES ?? 25 * 1024 * 1024);
+
+function formatMb(bytes: number): string {
+  return `${Math.round((bytes / (1024 * 1024)) * 10) / 10}MB`;
+}
 
 export interface UploadedFile {
   name: string;
@@ -27,6 +35,16 @@ export default function Uploader({ onFileReady }: Props) {
       const ext = "." + file.name.split(".").pop()?.toLowerCase();
       if (!ACCEPTED.includes(ext)) {
         setError(`Unsupported file type: ${ext}. Try PDF, DOCX, TXT, PNG, JPG or CSV.`);
+        return;
+      }
+      if (file.size === 0) {
+        setError("This file is empty.");
+        return;
+      }
+      if (file.size > MAX_FILE_SIZE_BYTES) {
+        setError(
+          `That file is ${formatMb(file.size)}, which is over the ${formatMb(MAX_FILE_SIZE_BYTES)} limit.`
+        );
         return;
       }
       setError(null);
@@ -70,15 +88,21 @@ export default function Uploader({ onFileReady }: Props) {
           type="file"
           accept={ACCEPTED.join(",")}
           className="hidden"
+          data-testid="file-input"
           onChange={(e) => {
             const file = e.target.files?.[0];
             if (file) processFile(file);
           }}
         />
       </div>
-      {error && <p className="mt-3 text-sm font-medium text-red-600">{error}</p>}
+      {error && (
+        <p data-testid="upload-error" className="mt-3 text-sm font-medium text-red-600">
+          {error}
+        </p>
+      )}
       <button
         type="button"
+        data-testid="try-sample"
         onClick={() => {
           const file = new File([SAMPLE_DOCUMENT], "sample_candidate_cv.txt", { type: "text/plain" });
           onFileReady({ name: file.name, file, textPreview: SAMPLE_DOCUMENT });
