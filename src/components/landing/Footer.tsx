@@ -44,13 +44,19 @@ export default function Footer() {
             <ul className="mt-3 space-y-2 text-sm text-slate-500">
               <li><a href="#waitlist" className="hover:text-slate-900">Early access</a></li>
               <li><a href="mailto:hello@piiredactor.com" className="hover:text-slate-900">Contact</a></li>
+              <li><Link href="/privacy" className="hover:text-slate-900">Privacy Policy</Link></li>
+              <li><Link href="/terms" className="hover:text-slate-900">Terms of Service</Link></li>
             </ul>
           </div>
         </div>
       </div>
-      <p className="mx-auto mt-10 max-w-6xl px-6 text-xs text-slate-400">
-        © {new Date().getFullYear()} PII Redactor. All rights reserved.
-      </p>
+      <div className="mx-auto mt-10 flex max-w-6xl flex-col gap-2 px-6 text-xs text-slate-400 sm:flex-row sm:items-center sm:justify-between">
+        <p>© {new Date().getFullYear()} PII Redactor. All rights reserved.</p>
+        <div className="flex gap-4">
+          <Link href="/privacy" className="hover:text-slate-600">Privacy</Link>
+          <Link href="/terms" className="hover:text-slate-600">Terms</Link>
+        </div>
+      </div>
     </footer>
   );
 }
