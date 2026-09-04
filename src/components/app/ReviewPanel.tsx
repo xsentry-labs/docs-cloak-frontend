@@ -10,18 +10,22 @@ import {
 } from "@/lib/pii";
 
 interface Props {
-  text: string;
+  /** Plain text of the upload, only available for TXT/CSV files — enables the live block preview. */
+  textPreview?: string;
   entities: DetectedEntity[];
   onChange: (entities: DetectedEntity[]) => void;
   onBack: () => void;
   onExport: () => void;
 }
 
-export default function ReviewPanel({ text, entities, onChange, onBack, onExport }: Props) {
+export default function ReviewPanel({ textPreview, entities, onChange, onBack, onExport }: Props) {
   const [manualValue, setManualValue] = useState("");
-  const [manualCategory, setManualCategory] = useState<PiiCategory>("name");
+  const [manualCategory, setManualCategory] = useState<PiiCategory>("NAME");
 
-  const preview = useMemo(() => redactedPreview(text, entities), [text, entities]);
+  const preview = useMemo(
+    () => (textPreview !== undefined ? redactedPreview(textPreview, entities) : null),
+    [textPreview, entities]
+  );
   const acceptedCount = entities.filter((e) => e.accepted).length;
 
   function toggleAccepted(id: string) {
@@ -39,7 +43,7 @@ export default function ReviewPanel({ text, entities, onChange, onBack, onExport
   function addManual() {
     const value = manualValue.trim();
     if (!value) return;
-    const start = text.indexOf(value);
+    const start = textPreview?.indexOf(value) ?? -1;
     onChange([
       ...entities,
       {
@@ -115,7 +119,7 @@ export default function ReviewPanel({ text, entities, onChange, onBack, onExport
                   </select>
                   <span className="text-xs text-slate-400">
                     {Math.round(entity.confidence * 100)}% confidence
-                    {entity.manual ? " · manual" : ""}
+                    {entity.manual ? " · manual" : entity.source ? ` · ${entity.source}` : ""}
                   </span>
                 </div>
               </div>
@@ -160,9 +164,16 @@ export default function ReviewPanel({ text, entities, onChange, onBack, onExport
           <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-slate-400">
             Redacted preview
           </p>
-          <pre className="h-96 overflow-y-auto whitespace-pre-wrap rounded-lg border border-slate-200 bg-slate-50 p-4 font-mono text-xs leading-relaxed text-slate-800">
-            {preview}
-          </pre>
+          {preview !== null ? (
+            <pre className="h-96 overflow-y-auto whitespace-pre-wrap rounded-lg border border-slate-200 bg-slate-50 p-4 font-mono text-xs leading-relaxed text-slate-800">
+              {preview}
+            </pre>
+          ) : (
+            <div className="flex h-96 items-center justify-center rounded-lg border border-dashed border-slate-300 bg-slate-50 p-4 text-center text-sm text-slate-500">
+              A text preview isn&apos;t available for this file type — the backend redacts the
+              real PDF/DOCX/image directly. Download it on the next step to see the result.
+            </div>
+          )}
         </div>
       </div>
 
@@ -179,7 +190,7 @@ export default function ReviewPanel({ text, entities, onChange, onBack, onExport
         </button>
       </div>
       <p className="mt-2 text-xs text-slate-400">
-        Categories shown: {Array.from(new Set(entities.map((e) => CATEGORY_LABEL[e.category]))).join(", ") || "—"}
+        Categories shown: {Array.from(new Set(entities.map((e) => CATEGORY_LABEL[e.category] ?? e.category))).join(", ") || "—"}
       </p>
     </div>
   );
