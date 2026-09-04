@@ -7,10 +7,17 @@ interface Props {
   onChange: (next: Set<PiiCategory>) => void;
   onBack: () => void;
   onDetect: () => void;
-  detecting: boolean;
+  /** null when idle; otherwise a short label describing the in-flight detection job. */
+  detectingLabel: string | null;
 }
 
-export default function CategoryPicker({ selected, onChange, onBack, onDetect, detecting }: Props) {
+export default function CategoryPicker({
+  selected,
+  onChange,
+  onBack,
+  onDetect,
+  detectingLabel,
+}: Props) {
   function toggle(id: PiiCategory) {
     const next = new Set(selected);
     if (next.has(id)) next.delete(id);
@@ -58,12 +65,17 @@ export default function CategoryPicker({ selected, onChange, onBack, onDetect, d
         <button
           type="button"
           onClick={onDetect}
-          disabled={selected.size === 0 || detecting}
+          disabled={selected.size === 0 || detectingLabel !== null}
           className="rounded-lg bg-slate-900 px-6 py-2.5 text-sm font-semibold text-white transition hover:bg-slate-700 disabled:opacity-50"
         >
-          {detecting ? "Detecting…" : "Detect sensitive information"}
+          {detectingLabel ?? "Detect sensitive information"}
         </button>
       </div>
+      {detectingLabel && (
+        <p className="mt-3 text-right text-xs text-slate-400">
+          Large PDFs and scanned images can take a bit longer.
+        </p>
+      )}
     </div>
   );
 }

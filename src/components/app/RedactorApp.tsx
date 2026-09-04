@@ -20,7 +20,7 @@ export default function RedactorApp() {
   const [file, setFile] = useState<UploadedFile | null>(null);
   const [categories, setCategories] = useState<Set<PiiCategory>>(DEFAULT_CATEGORIES);
   const [entities, setEntities] = useState<DetectedEntity[]>([]);
-  const [detecting, setDetecting] = useState(false);
+  const [detectingLabel, setDetectingLabel] = useState<string | null>(null);
   const [detectError, setDetectError] = useState<string | null>(null);
 
   function handleFileReady(f: UploadedFile) {
@@ -31,16 +31,19 @@ export default function RedactorApp() {
 
   async function handleDetect() {
     if (!file) return;
-    setDetecting(true);
+    setDetectingLabel("Queued…");
     setDetectError(null);
     try {
-      const res = await redactDocument(file.file, { categories: Array.from(categories) });
+      const res = await redactDocument(file.file, {
+        categories: Array.from(categories),
+        onStatus: (status) => setDetectingLabel(status === "queued" ? "Queued…" : "Detecting…"),
+      });
       setEntities(res.entities);
       setStep(2);
     } catch (err) {
       setDetectError(err instanceof Error ? err.message : "Detection failed.");
     } finally {
-      setDetecting(false);
+      setDetectingLabel(null);
     }
   }
 
@@ -80,7 +83,7 @@ export default function RedactorApp() {
                 onChange={setCategories}
                 onBack={() => setStep(0)}
                 onDetect={handleDetect}
-                detecting={detecting}
+                detectingLabel={detectingLabel}
               />
               {detectError && (
                 <p className="mt-4 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">

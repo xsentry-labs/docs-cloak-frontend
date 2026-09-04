@@ -22,6 +22,7 @@ const MIN_PASSWORD_LENGTH = 8;
 
 export default function ExportPanel({ file, categories, entities, onBack, onRestart }: Props) {
   const [status, setStatus] = useState<"options" | "loading" | "done" | "error">("options");
+  const [loadingLabel, setLoadingLabel] = useState("Applying your redactions…");
   const [error, setError] = useState<string | null>(null);
   const [result, setResult] = useState<FinalResult | null>(null);
 
@@ -45,6 +46,7 @@ export default function ExportPanel({ file, categories, entities, onBack, onRest
     }
     setPasswordError(null);
     setStatus("loading");
+    setLoadingLabel("Queued…");
     setError(null);
 
     try {
@@ -58,6 +60,8 @@ export default function ExportPanel({ file, categories, entities, onBack, onRest
         excludeEntityIds,
         manualRedactionTexts,
         originalPassword: protectOriginal ? password : undefined,
+        onStatus: (s) =>
+          setLoadingLabel(s === "queued" ? "Queued…" : "Applying your redactions…"),
       });
 
       setResult({
@@ -153,7 +157,8 @@ export default function ExportPanel({ file, categories, entities, onBack, onRest
     return (
       <div className="py-16 text-center">
         <div className="mx-auto h-8 w-8 animate-spin rounded-full border-2 border-slate-200 border-t-indigo-600" />
-        <p className="mt-4 text-sm text-slate-500">Applying your redactions…</p>
+        <p className="mt-4 text-sm text-slate-500">{loadingLabel}</p>
+        <p className="mt-1 text-xs text-slate-400">Large PDFs and scanned images can take a bit longer.</p>
       </div>
     );
   }
