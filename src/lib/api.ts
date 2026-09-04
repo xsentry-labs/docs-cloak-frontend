@@ -19,6 +19,7 @@ interface RedactApiResponse {
   entities_redacted: number;
   entities: RedactApiEntity[];
   document_url: string;
+  original_document_url: string | null;
   expires_at: string;
   processing_ms: number;
   error?: string;
@@ -27,6 +28,7 @@ interface RedactApiResponse {
 export interface RedactResult {
   entities: DetectedEntity[];
   documentUrl: string;
+  originalDocumentUrl: string | null;
   expiresAt: string;
 }
 
@@ -37,6 +39,8 @@ export interface RedactOptions {
   /** Exact text spans the user added manually that aren't in the detected entity list. */
   manualRedactionTexts?: string[];
   style?: "block" | "label";
+  /** When set, also returns a password-protected/encrypted copy of the original file. */
+  originalPassword?: string;
 }
 
 export async function redactDocument(file: File, options: RedactOptions): Promise<RedactResult> {
@@ -53,6 +57,10 @@ export async function redactDocument(file: File, options: RedactOptions): Promis
         manualRedactions: (options.manualRedactionTexts ?? []).map((text) => ({ text })),
       })
     );
+  }
+
+  if (options.originalPassword) {
+    formData.append("originalPassword", options.originalPassword);
   }
 
   let res: Response;
@@ -86,6 +94,7 @@ export async function redactDocument(file: File, options: RedactOptions): Promis
       accepted: e.accepted,
     })),
     documentUrl: data.document_url,
+    originalDocumentUrl: data.original_document_url,
     expiresAt: data.expires_at,
   };
 }
